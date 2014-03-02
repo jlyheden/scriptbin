@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # This script will perform a DynDNS-like function for Amazon's Route 53
-# Tailored to be used as a hook for wan-start as described in
+# Tailored to be used as a hook for dhcpc-event as described in
 # https://github.com/RMerl/asuswrt-merlin/wiki/User-scripts
 #
 # Original Author: Johan Lindh <johan@linkdata.se>
@@ -21,12 +21,17 @@
 #  base64
 #
 # This script should be installed into the file path:
-# /jffs/scripts/wan-start
+# /jffs/scripts/dhcpc-event
 #
 # Ipkg dependencies:
 # * bind
 # * coreutils
 #
+
+# Only run on BOUND operation
+if [ "$1" != "bound" ]; then
+  exit 0
+fi
 
 # The domain and host name to update
 # and the desired TTL of the record
