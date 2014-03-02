@@ -35,7 +35,7 @@ Hostname=SET_YOUR_HOSTNAME
 PublicDnsName="${Hostname}.${Domain}"
 NewTTL=600
 RecordType=A
-CurrentIP=$(ip addr show dev eth0|awk '$1 ~ /inet/ { gsub(/\/[0-9]+/, "", $2); print $2 }')
+CurrentIP=$(nvram get wan_ipaddr)
 
 # The Amazon Route 53 zone ID for the domain
 # and the Amazon ID and SecretKey. Remember to
