@@ -38,7 +38,7 @@ mkdir -p "$tmp_dir"
 chmod 0700 "$tmp_dir"
 
 c_logger "Scanning $1 for non-gzipped files"
-tocompress=$(find $1 -name "*,S=*" -printf "file -b '%p' |grep -qs ^gzip || echo '%p'\n" | sh)
+tocompress=$(find $1 -name "*,S=*" -printf "head -c 2 '%p' | file -b - |grep -qs ^gzip || echo '%p'\n" | sh)
 
 # Iterate on newline, not whitespace
 IFS='
