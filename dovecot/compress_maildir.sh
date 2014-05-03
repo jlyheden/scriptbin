@@ -19,6 +19,7 @@ if [ -d "$tmp_dir" ]; then
   rm -rf "$tmp_dir"
 fi
 mkdir -p "$tmp_dir"
+chmod 0700 "$tmp_dir"
 
 c_logger "Scanning $1 for non-gzipped files"
 tocompress=$(find $1 -name "*,S=*" -printf "file -b '%p' |grep -qs ^gzip || echo '%p'\n" | sh)
@@ -54,8 +55,12 @@ for mail_file_path in $tocompress; do
   touch --reference="$mail_file_path" "$tmp_file_path"
 
   # Lock maildir
-  #PID=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20)
-  c_logger mv "$tmp_file_path" "$mail_file_path"
-  #kill $PID
+  if [ -f "$mail_file_path" ]; then
+    PID=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20)
+    mv "$tmp_file_path" "$mail_file_path"
+    kill -TERM $PID
+  else
+    c_logger "File: $mail_file_path doesnt exist anymore"
+  fi
 
 done
