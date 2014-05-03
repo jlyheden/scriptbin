@@ -49,10 +49,14 @@ IFS='
 
 # Dry run
 if [ "$2" == "--dry-run" ]; then
-  echo "Files to be compressed:"
-  for mail_file_path in $tocompress; do
-    echo "$mail_file_path"
-  done
+  if [ -z "$tocompress" ]; then
+    echo "No files found to be compressed"
+  else
+    echo "Files to be compressed:"
+    for mail_file_path in $tocompress; do
+      echo "$mail_file_path"
+    done
+  fi
   exit 0
 fi
 
