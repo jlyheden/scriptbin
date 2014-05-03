@@ -11,15 +11,13 @@ fi
 tmp_dir="/tmp/maildir_compress/$1"
 
 c_logger() {
-  echo "${date}: $1" >> $tmp_dir/compress.log
+  echo "$(date): $1" >> $tmp_dir/compress.log
 }
 
+# Create tmp dir
 if [ -d "$tmp_dir" ]; then
-  c_logger "Clearing temp dir: $tmp_dir"
   rm -rf "$tmp_dir"
 fi
-
-c_logger "Creating temp dir: $tmp_dir"
 mkdir -p "$tmp_dir"
 
 c_logger "Scanning $1 for non-gzipped files"
