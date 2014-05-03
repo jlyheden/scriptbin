@@ -13,8 +13,8 @@
 #
 # Caveats
 # * $tocompress filters out all mail files not identified as
-#   ^gzip mime type, in one case gzip produced a file identified
-#   as XXX
+#   ^gzip mime type, in some cases gzip produced a file identified
+#   as Minix filesystem
 # * script will lock the maildir for each file it compresses
 # * probably not particulary efficient
 #
@@ -74,6 +74,14 @@ for mail_file_path in $tocompress; do
 
   # Gzip to tmp location
   gzip -9 "$mail_file_path" -c > "$tmp_file_path"
+
+  # Verify file, if it doesnt match gzip then die
+  gzip_file_type=$(file -b "$tmp_file_path")
+  if ! [[ "$gzip_file_type" =~ ^gzip ]]; then
+    c_logger "File $tmp_file_path identified as type: $gzip_file_type"
+    c_logger "Goodbye"
+    exit 1
+  fi
 
   # Preserve attributes
   chown --reference="$mail_file_path" "$tmp_file_path"
