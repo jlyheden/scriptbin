@@ -8,26 +8,42 @@ if [ -z "$1" ]; then
   exit 0
 fi
 
-tocompress=`find $1 -iname '*,S=' -exec file -b "{}" | grep -qs ^gzip \;`
+tmp_dir="/tmp/maildir_compress/$1"
 
-exit 0
-
-for mail in $tocompress; do
-        echo "gzipping $1/cur/$mail to $1/tmp/${mail}Z"
-        gzip -S Z "$1/cur/$mail" -c > "$1/tmp/${mail}Z"
-        echo "setting mtime"
-        touch -r "$1/cur/$mail" "$1/tmp/${mail}Z"
-done
-
-echo "aquiring maildirlock"
-if PID=`/usr/lib/dovecot/maildirlock $1/cur 20`; then
-        #locking successfull, moving compressed files
-        for mail in $tocompress; do
-                mv $1/tmp/${mail}Z $1/cur/
-                rm $1/cur/${mail}
-        done
-        kill $PID
-else
-        echo "lock failed"
-        exit -1
+if [ -d "$tmp_dir" ]; then
+  echo "Clearing temp dir: $tmp_dir"
+  rm -rf "$tmp_dir"
 fi
+
+echo "Creating temp dir: $tmp_dir"
+mkdir -p "$tmp_dir"
+
+tocompress=$(find $1 -name "*,S=*" -printf "file -b '%p' |grep -qs ^gzip || echo '%p'\n" | sh)
+
+for mail_file_path in $tocompress; do
+
+  # Get file name of mail
+  mail_file_name=$(basename "$mail_file_path")
+  tmp_file_path="$tmp_dir/$mail_file_name"
+  maildir_path=$(dirname "$(dirname \"$mail_file_name\")")
+
+  # Die if tmp file already exists
+  if [ -f "$tmp_file_path" ]; then
+    echo "The tmp file $tmp_file_path already exists!"
+    exit 1
+  fi
+
+  # Gzip to tmp location
+  gzip -9 "$mail_file_path" -c > "$tmp_file_path"
+
+  # Preserve attributes
+  chown --reference="$mail_file_path" "$tmp_file_path"
+  chmod --reference="$mail_file_path" "$tmp_file_path"
+  touch --reference="$mail_file_path" "$tmp_file_path"
+
+  # Lock maildir
+  echo PID=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20)
+  echo mv "$tmp_file_path" "$mail_file_name"
+  echo kill $PID
+
+done
