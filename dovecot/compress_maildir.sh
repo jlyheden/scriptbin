@@ -2,9 +2,25 @@
 #
 # Dovecot compress maildir script
 #
+# Kind of based on recommendations from
+# http://wiki2.dovecot.org/Plugins/Zlib
+#
+# Script supports nested maildirs and does
+# not care about file naming (Z in the file name)
+# which is useful in cases where you enable
+# compression in the LDA before compressing
+# existing messages
+#
+# Caveats
+# * $tocompress filters out all mail files not identified as
+#   ^gzip mime type, in one case gzip produced a file identified
+#   as XXX
+# * script will lock the maildir for each file it compresses
+# * probably not particulary efficient
+#
 
 if [ -z "$1" ]; then
-  echo "Usage: $0 /path/to/maildir"
+  echo "Usage: $0 /path/to/maildir [--dry-run]"
   exit 0
 fi
 
@@ -27,6 +43,15 @@ tocompress=$(find $1 -name "*,S=*" -printf "file -b '%p' |grep -qs ^gzip || echo
 # Iterate on newline, not whitespace
 IFS='
 '
+
+# Dry run
+if [ "$2" == "--dry-run" ]; then
+  echo "Executed with --dry-run flag, will only output the list of messages found needing compression"
+  for mail_file_path in $tocompress; do
+    echo "$mail_file_path"
+  done
+  exit 0
+fi
 
 for mail_file_path in $tocompress; do
 
@@ -70,3 +95,5 @@ for mail_file_path in $tocompress; do
   fi
 
 done
+
+c_logger "Done"
