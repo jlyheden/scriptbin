@@ -12,9 +12,6 @@
 # existing messages
 #
 # Caveats
-# * $tocompress filters out all mail files not identified as
-#   ^gzip mime type, in some cases gzip produced a file identified
-#   as Minix filesystem
 # * script will lock the maildir for each file it compresses
 # * probably not particulary efficient
 #
@@ -22,6 +19,10 @@
 if [ -z "$1" ]; then
   echo "Usage: $0 /path/to/maildir [--dry-run]"
   exit 0
+fi
+
+if [ "$2" == "--dry-run" ]; then
+  echo "Running in dry-run mode, will only scan for files to compress and list them"
 fi
 
 tmp_dir="/tmp/maildir_compress/$1"
@@ -32,12 +33,14 @@ c_logger() {
 
 # Create tmp dir
 if [ -d "$tmp_dir" ]; then
+  echo "Temp dir $tmp_dir exists, rm -rf it"
   rm -rf "$tmp_dir"
 fi
+echo "Creating temp dir $tmp_dir"
 mkdir -p "$tmp_dir"
 chmod 0700 "$tmp_dir"
 
-c_logger "Scanning $1 for non-gzipped files"
+echo "Scanning $1 for non-gzipped files"
 tocompress=$(find $1 -name "*,S=*" -printf "head -c 2 '%p' | file -b - |grep -qs ^gzip || echo '%p'\n" | sh)
 
 # Iterate on newline, not whitespace
@@ -46,7 +49,7 @@ IFS='
 
 # Dry run
 if [ "$2" == "--dry-run" ]; then
-  echo "Executed with --dry-run flag, will only output the list of messages found needing compression"
+  echo "Files to be compressed:"
   for mail_file_path in $tocompress; do
     echo "$mail_file_path"
   done
@@ -74,14 +77,6 @@ for mail_file_path in $tocompress; do
 
   # Gzip to tmp location
   gzip -9 "$mail_file_path" -c > "$tmp_file_path"
-
-  # Verify file, if it doesnt match gzip then die
-  gzip_file_type=$(file -b "$tmp_file_path")
-  if ! [[ "$gzip_file_type" =~ ^gzip ]]; then
-    c_logger "File $tmp_file_path identified as type: $gzip_file_type"
-    c_logger "Goodbye"
-    exit 1
-  fi
 
   # Preserve attributes
   chown --reference="$mail_file_path" "$tmp_file_path"
