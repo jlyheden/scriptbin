@@ -56,9 +56,13 @@ for mail_file_path in $tocompress; do
 
   # Lock maildir
   if [ -f "$mail_file_path" ]; then
-    PID=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20)
-    mv "$tmp_file_path" "$mail_file_path"
-    kill -TERM $PID
+    if LOCK=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20); then
+      mv "$tmp_file_path" "$mail_file_path"
+      kill -TERM "$LOCK"
+    else
+      c_logger "Failed to lock $maildir_path"
+      rm -f "$tmp_file_path"
+    fi
   else
     c_logger "File: $mail_file_path doesnt exist anymore"
   fi
