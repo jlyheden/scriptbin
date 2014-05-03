@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Dovecot compress maildir script
+#
+
 if [ -z "$1" ]; then
   echo "Usage: $0 /path/to/maildir"
   exit 0
