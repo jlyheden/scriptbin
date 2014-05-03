@@ -56,9 +56,10 @@ for mail_file_path in $tocompress; do
 
   # Lock maildir
   if [ -f "$mail_file_path" ]; then
+    c_logger "lock command: /usr/lib/dovecot/maildirlock \"$maildir_path\" 20"
     if LOCK=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20); then
       mv "$tmp_file_path" "$mail_file_path"
-      kill -TERM "$LOCK"
+      kill -TERM $LOCK
     else
       c_logger "Failed to lock $maildir_path"
       rm -f "$tmp_file_path"
