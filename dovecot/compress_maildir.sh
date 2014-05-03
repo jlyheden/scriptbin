@@ -33,7 +33,8 @@ for mail_file_path in $tocompress; do
   # Get file name of mail
   mail_file_name=$(basename "$mail_file_path")
   tmp_file_path="$tmp_dir/$mail_file_name"
-  maildir_path=$(dirname "$(dirname \"$mail_file_path\")")
+  maildir_path_1=$(dirname "$mail_file_path")
+  maildir_path=$(dirname "$maildir_path_1")
   
   c_logger "Processing file: $mail_file_path"
   c_logger "mail_file_name: $mail_file_name"
