@@ -21,6 +21,10 @@ mkdir -p "$tmp_dir"
 echo "Scanning $1 for non-gzipped files"
 tocompress=$(find $1 -name "*,S=*" -printf "file -b '%p' |grep -qs ^gzip || echo '%p'\n" | sh)
 
+# Iterate on newline, not whitespace
+IFS='
+'
+
 for mail_file_path in $tocompress; do
 
   echo "Processing file: $mail_file_path"
