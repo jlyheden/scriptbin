@@ -18,9 +18,12 @@ fi
 echo "Creating temp dir: $tmp_dir"
 mkdir -p "$tmp_dir"
 
+echo "Scanning $1 for non-gzipped files"
 tocompress=$(find $1 -name "*,S=*" -printf "file -b '%p' |grep -qs ^gzip || echo '%p'\n" | sh)
 
 for mail_file_path in $tocompress; do
+
+  echo "Processing file: $mail_file_path"
 
   # Get file name of mail
   mail_file_name=$(basename "$mail_file_path")
@@ -42,8 +45,8 @@ for mail_file_path in $tocompress; do
   touch --reference="$mail_file_path" "$tmp_file_path"
 
   # Lock maildir
-  echo PID=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20)
-  echo mv "$tmp_file_path" "$mail_file_name"
-  echo kill $PID
+  #PID=$(/usr/lib/dovecot/maildirlock "$maildir_path" 20)
+  echo mv "$tmp_file_path" "$mail_file_path"
+  #kill $PID
 
 done
